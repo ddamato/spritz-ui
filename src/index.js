@@ -1,11 +1,12 @@
 import html from './template.html';
 import css from './style.pcss';
-import * as utils from './utils';
-import Wrapper from './Wrapper';
+import * as _utils from './utils';
 
-const WORD_SPLIT_REGEX = /((?=\w{15,})(\w{7})|(?!^\w{1,14})$)/g;
-const HYPHENATE_REGEX = /[^\s-]+-?/g;
-const CHAR_UNWRAP_REGEX = /[\(|\)\"]/g;
+const statuses = {
+  STATUS_STOPPED: 'stopped',
+  STATUS_PAUSED: 'paused',
+  STATUS_PLAYING: 'playing',
+}
 export default class SpritzUI extends HTMLElement {
   constructor() {
     super();
@@ -13,49 +14,89 @@ export default class SpritzUI extends HTMLElement {
     this.shadowRoot.innerHTML = `<style>${css}</style>${html}`;
     this._$redicle = this.shadowRoot.getElementById('redicle');
     this._$word = this.shadowRoot.getElementById('word');
-    this._percent = this._$redicle.style.getPropertyValue('--offsetPercentage');
-    this._sentenceIndices = [0];
-    this._words = [];
+    this._$slot = this.shadowRoot.getElementById('text');
   }
 
   process(text) {
-    const wrapper = new Wrapper();
-    this._words = text.replace(WORD_SPLIT_REGEX, '$1- ')
-      .match(HYPHENATE_REGEX)
-      .filter(/[\w]/.test)
-      .map((result, i, arr) => {
-        if (/[.?!]/.test(result) && arr[i + 1]) this._sentenceIndices.push(i + 1);
-        return {
-          content: result.replace(CHAR_UNWRAP_REGEX, ''),
-          orp: utils.getOptimalRecognitionPoint(result),
-          ...wrapper.check(result)  
-        }
-      });
+    this._words = _utils.process(text, this._sentenceIndices);
+    return this;
+  }
+
+  connectedCallback() {
+    this._sentenceIndices = [0];
+    this._words = [];
+
+    this.index = -1;
+    this.wpm = 250;
+
+    this._orpOffset = this._$redicle.style.getPropertyValue('--orpOffset');
+
+    this._$redicle.addEventListener('animationend', () => this._play());
+    this._$slot.addEventListener('slotchange', () => {
+      const [node] = this._$slot.assignedNodes({ flatten: true });
+      this.process(node.textContent);
+    });
+  }
+
+  get duration() {
+    return 60000 / this.wpm;
+  }
+
+  get estimatedMinutes() {
+    return this._words.length / this.wpm;
   }
 
   static get observedAttributes() {
-    return ['index'];
+    return ['index', 'status', 'wpm'];
   }
 
-  attributeChangedCallback(attrName, oldValue, newValue) {
-    if (attrName === 'index' && oldValue !== newValue) {
+  attributeChangedCallback(attrName, oldVal, newVal) {
+    if (oldVal === newVal) return;
+
+    if (attrName === 'index') {
       this._render();
+    }
+
+    if (attrName === 'wpm') {
+      this._$redicle.style.setProperty('--msDuration', this.duration);
+    }
+
+    if (attrName === 'status') {
+      if (newVal === statuses.STATUS_PAUSED)  {
+        this._pause && this._pause();
+      }
+
+      if (newVal === statuses.STATUS_STOPPED)  {
+        this._pause && this._pause();
+        this.index = -1;
+      }
     }
   }
 
   play() {
-    this._play(60000 / this.wpm);
+    this.status = 'playing';
     return this;
   }
 
+  get status() {
+    return this.getAttribute('status');
+  }
+
+  set status(newVal) {
+    const val = Object.values(statuses).includes(newVal)
+      ? newVal
+      : statuses.STATUS_STOPPED;
+      this.setAttribute('status', val);
+  }
+
   pause() {
-    window.cancelAnimationFrame(this._t);
+    this.status = 'paused';
     return this;
   }
 
   stop() {
-    this.pause();
-    this.index = 0;
+    this.status = 'stopped';
+    return this;
   }
 
   stepforward() {
@@ -68,38 +109,41 @@ export default class SpritzUI extends HTMLElement {
     this.index--;
   }
 
-  fastforward() {
-    this.pause();
-    this.index = this._sentenceSteps()[1];
-  }
-
   fastbackward() {
     this.pause();
-    this.index = this._sentenceSteps()[0];
+    this.index = this._jumpBackward();
   }
 
-  _sentenceSteps() {
-    let afterIndex = this._sentenceIndices.findIndex((i) => i >= this.index);
-    
-    // if equals, get before and after (if they exist)
-
-    if (afterIndex === this.index) {
-      // check to see if this._sentenceIndices[this.index - 1] && this._sentenceIndices[this.index + 1] exist
-    }
-
-    // if not equals, just get before (if it exists)
-
-    
-
+  fastforward() {
+    this.pause();
+    this.index = this._jumpForward();
   }
 
-  _play(time) {
-    const ms = utils.adjustTiming(time, this._words[this.index]);
+  _getSentenceIndex() {
+    const closestWordIndex = this._sentenceIndices.find((i) => i >= this.index);
+    const closestSentenceIndex = this._sentenceIndices.indexOf(closestWordIndex);
+    return closestWordIndex !== this.index
+      ? _utils.indexWithinBoundaries(closestSentenceIndex - 1, this._sentenceIndices)
+      : closestSentenceIndex;
+  }
+
+  _jumpForward() {
+    const sentenceIndex = this._getSentenceIndex();
+    const wordIndex = _utils.indexWithinBoundaries(sentenceIndex + 1, this._sentenceIndices);
+    return this._sentenceIndices[wordIndex];
+  }
+
+  _jumpBackward() {
+    const sentenceIndex = this._getSentenceIndex();
+    const wordIndex = _utils.indexWithinBoundaries(sentenceIndex - 1, this._sentenceIndices);
+    return this._sentenceIndices[wordIndex];
+  }
+
+  _play() {
+    if (!this._words.length || this._wordUndefined(this.index + 1)) return this.stop();
     this.index += 1;
-    if (this._wordUndefined(this.index + 1)) {
-      return window.cancelAnimationFrame(this._t);
-    }
-    this._t = utils.requestTimeout(() => this._play(time), ms);
+    const ms = _utils.adjustTiming(this.duration, this._words[this.index]);
+    this._pause = _utils.requestTimeout(() => this._play(), ms);
   }
 
   _wordUndefined(index) {
@@ -111,14 +155,21 @@ export default class SpritzUI extends HTMLElement {
   }
 
   _render() {
+    if (!~this.index) return this._reset();
     const word = this._words[this.index];
-    this._$word.innerHTML = utils.getInnerHTML(word);
-    const orp = this._$word.querySelector(utils.orpTagName);
-    const center = Math.ceil(orp.offsetWidth / 2);
-    const transform = (this._$redicle.offsetWidth * this._percent) - (orp.offsetLeft + center);
-    this._$word.style.setProperty('--transform', `${transform}px`); // change to percentage
+    this._$word.innerHTML = _utils.getInnerHTML(word);
+    const $orp = this._$word.querySelector(_utils.orpTagName);
+    const offset = _utils.adjustOffsetPercent($orp, this._$redicle);
+    this._$word.style.setProperty('--wordOffset', `${this._orpOffset - offset}%`); // change to percentage
     this._setAttr('quotes', word);
     this._setAttr('parentheses', word);
+  }
+
+  _reset() {
+    this._$word.innerHTML = '';
+    this._$word.style = '';
+    this.removeAttribute('quotes');
+    this.removeAttribute('parentheses');
   }
 
   _setAttr(key, metadata) {
@@ -130,7 +181,7 @@ export default class SpritzUI extends HTMLElement {
   }
 
   get wpm() {
-    return Number(this.getAttribute('wpm')) || 250;
+    return Number(this.getAttribute('wpm'));
   }
 
   set wpm(newVal) {
@@ -142,19 +193,15 @@ export default class SpritzUI extends HTMLElement {
   }
 
   get index() {
-    return Number(this.getAttribute('index')) || 0;
+    return parseInt(this.getAttribute('index'));
   }
 
   set index(newVal) {
-    if (!isNaN(newVal)) {
-      this.setAttribute('index', newVal);
-    } else {
-      this.removeAttribute('index');
-    }
-  }
-
-  get estimatedMinutes() {
-    return this._words.length / this.wpm;
+    let val = -1;
+    if (isNaN(newVal)) return;
+    val = parseInt(newVal);
+    if (!(_utils.indexWithinBoundaries(val, this._words) === val || val === -1)) return;
+    this.setAttribute('index', val);
   }
 }
 

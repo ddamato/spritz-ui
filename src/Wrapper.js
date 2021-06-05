@@ -1,5 +1,3 @@
-import { removePunctuation } from './utils';
-
 export default class Wrapper {
   constructor() {
     this.parentheses = false;
@@ -7,7 +5,7 @@ export default class Wrapper {
   }
 
   check(word) {
-    word = removePunctuation(word);
+    word = _removePunctuation(word);
     return {
       parentheses: _check.call(this, { 
         key: 'parentheses',
@@ -23,13 +21,16 @@ export default class Wrapper {
   }
 }
 
+function _removePunctuation(word) {
+  return word.replace(/[.?!,;:]/g, '');
+}
 
 function _check({ key, startsWith, endsWith }) {
   const isEnd = this[key] && endsWith;
   const isStart = !this[key] && startsWith && !endsWith;
 
   if (isStart || isEnd) {
-    this[key] = !this[type];
+    this[key] = !this[key];
     return true;
   }
   return this[key];

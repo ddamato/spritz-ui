@@ -1,19 +1,23 @@
 #redicle {
-  --percentage: calc(var(--offsetPercentage) / 100 * 100%);
+  --orpPercent: calc(var(--orpOffset) / 100 * 100%);
+  --focus: 1ch;
   position: relative;
   border-top: 4px solid currentColor;
   border-bottom: 4px solid currentColor;
   width: 10em;
-  height: 3.3ch;
+  padding: var(--focus) 0;
   font-size: 2em;
   background-repeat: no-repeat;
-  background-position: var(--percentage) 0;
+  background-position: var(--orpPercent) 0;
   background-size: 100%;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
 }
 
 :host([status="playing"]) #redicle {
   background-image: linear-gradient(to right, rgba(128, 128, 128, .3) 100%, transparent 100%);
-	animation: fade 2s linear forwards;
+	animation: fade calc(var(--msDuration, 240) * 6ms) linear forwards;
 }
 
 @keyframes fade {
@@ -24,8 +28,8 @@
   content: "";
   border: 2px solid currentColor;
   position: absolute;
-  height: .2ch;
-  left: var(--percentage);
+  height: calc(var(--focus) / 2);
+  left: var(--orpPercent);
 }
 
 #redicle:before {
@@ -34,4 +38,15 @@
 
 #redicle:after {
   bottom: 0;
+}
+
+#word {
+  transform: translatex(var(--wordOffset));
+  min-height: 2.2ex;
+  flex: 1;
+}
+
+#word b {
+  font-weight: inherit;
+  color: var(--spritz-orp-accent, red);
 }

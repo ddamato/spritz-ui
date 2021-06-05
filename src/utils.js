@@ -1,6 +1,4 @@
-const CLAUSE_PAUSE_ADJUST = 1.5;
-const NUMBER_PAUSE_ADJUST = 1.5;
-const SENTENCE_PAUSE_ADJUST = 3;
+import Wrapper from './Wrapper';
 
 const puncExceptions = [ 
   'ave.',
@@ -20,46 +18,84 @@ const puncExceptions = [
   'tpk.'
 ];
 
+const adjustments = {
+  clause(content) {
+    // Pause multiplier 1.5
+    return /[,:;]$/.test(content) ? 1.5 : 1;
+  },
+  number(content) {
+    // Pause multiplier 1.5
+    return /\d+[^,:;.!?]{0,}$/.test(content) ? 1.5 : 1;
+  },
+  sentence(content) {
+    // Pause multiplier 3
+    return /[.?!]$/.test(content) && !puncExceptions.includes(content.toLowerCase()) ? 3 : 1;
+  }
+};
+
+const WORD_SPLIT_REGEX = /((?=\w{15,})(\w{7})|(?!^\w{1,14})$)/g;
+const HYPHENATE_REGEX = /[^\s-]+-?/g;
+const CHAR_UNWRAP_REGEX = /[\(|\)\"]/g;
+
 export const orpTagName = 'b';
 
-export function adjustTiming(duration, { content }) {
-  duration *= Number(!/[,:;]$/.test(content)) && CLAUSE_PAUSE_ADJUST;
-  duration *= Number(!/\d+[^,:;.!?]{0,}$/.test(content)) && NUMBER_PAUSE_ADJUST;
-  duration *= Number(!/[.?!]$/.test(content) && checkExceptions(content)) && SENTENCE_PAUSE_ADJUST;
+export function adjustTiming(duration, metadata) {
+  if (!metadata) return duration;
+  const { content } = metadata;
+  duration *= adjustments.clause(content);
+  duration *= adjustments.number(content);
+  duration *= adjustments.sentence(content);
   return duration;
 }
 
 export function requestTimeout(fn, delay) {
   let raf;
+  const cancel = () => window.cancelAnimationFrame(raf);
   const start = new Date().getTime();
 
   const loop = () => {
     const delta = new Date().getTime() - start;
     if (delta >= delay) {
       fn();
-      window.cancelAnimationFrame(raf);
+      cancel();
       return;
     }
     raf = window.requestAnimationFrame(loop);
-    return () => window.cancelAnimationFrame(raf);
+    return cancel;
   };
-  raf = window.requestAnimationFrame(loop);
-  return () => window.cancelAnimationFrame(raf);
+  return loop();
 }
 
-function checkExceptions(content) {
-  return !puncExceptions.includes(content.toLowerCase())
+export function indexWithinBoundaries(index, arr) {
+  return Math.max(Math.min(index, arr.length - 1), 0);
 }
 
-export function removePunctuation(word) {
-  return word.replace(/[.?!,;:]/g, '');
-}
-
-export function getOptimalRecognitionPoint(word) {
+function getOptimalRecognitionPoint(word) {
   const orp = Math.ceil((word.length - 1) / 4);
   return /\W/.test(word[orp]) ? orp - 1 : orp;
 }
 
 export function getInnerHTML({ content, orp }) {
-  return content.replace(/./g, (char, i) => i === orp ? `<${orpTagName}>${char}</${orpTagName}>` : char);
+  return content.replace(/./g, (char, index) => index === orp ? `<${orpTagName}>${char}</${orpTagName}>` : char);
+}
+
+export function adjustOffsetPercent($orp, $redicle) {
+  const orpCenter = $orp.offsetLeft + Math.ceil($orp.offsetWidth / 2) - 2;
+  return orpCenter * 100 / $redicle.offsetWidth;
+}
+
+export function process(text, sentenceIndices) {
+  if (!text) return;
+    const wrapper = new Wrapper();
+    return text.replace(WORD_SPLIT_REGEX, '$1- ')
+      .match(HYPHENATE_REGEX)
+      .filter((result) => /[\w]/.test(result))
+      .map((result, i, arr) => {
+        if (/[.?!]/.test(result) && arr[i + 1]) sentenceIndices.push(i + 1);
+        return {
+          content: result.replace(CHAR_UNWRAP_REGEX, ''),
+          orp: getOptimalRecognitionPoint(result),
+          ...wrapper.check(result)  
+        }
+      });
 }
