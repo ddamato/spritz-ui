@@ -25,7 +25,7 @@ export default class SpritzUI extends HTMLElement {
     this._$redicle.addEventListener('animationend', () => this._play());
     this._$slot.addEventListener('slotchange', () => {
       const [node] = this._$slot.assignedNodes({ flatten: true });
-      this.process(node.textContent);
+      !this.content && this.process(node.textContent);
     });
   }
 
