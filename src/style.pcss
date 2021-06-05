@@ -21,12 +21,12 @@
 
 #redicle {
   --orpPercent: calc(var(--orpOffset, 38) / 100 * 100%);
-  --focus: 1ch;
+  --verticalPadding: 1ch;
   position: relative;
   border-top: 4px solid currentColor;
   border-bottom: 4px solid currentColor;
   width: 10em;
-  padding: var(--focus) 0;
+  padding: var(--verticalPadding) 0;
   background-repeat: no-repeat;
   background-position: var(--orpPercent) 0;
   background-size: 100%;
@@ -48,7 +48,7 @@
   content: "";
   border: 2px solid currentColor;
   position: absolute;
-  height: calc(var(--focus) / 2);
+  height: calc(var(--verticalPadding) / 2);
   left: var(--orpPercent);
 }
 

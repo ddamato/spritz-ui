@@ -18,7 +18,7 @@ export default class SpritzUI extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['index', 'status', 'wpm'];
+    return ['content', 'index', 'status', 'wpm'];
   }
 
   connectedCallback() {
@@ -34,6 +34,7 @@ export default class SpritzUI extends HTMLElement {
     if (attrName === 'index') this._render();
     if (attrName === 'wpm') this._$redicle.style.setProperty('--msDuration', this.duration);
     if (attrName === 'status') this._handleStatusChange(newVal);
+    if (attrName === 'content') this._processById(newVal);
   }
 
   fastbackward() {
@@ -139,6 +140,11 @@ export default class SpritzUI extends HTMLElement {
     this._pause = _utils.requestTimeout(() => this._play(), ms);
   }
 
+  _processById(id) {
+    const elem = document.getElementById(id);
+    elem && this.process(elem.textContent);
+  }
+
   _render() {
     if (!~this.index) return this._reset();
     const word = this._words[this.index];
@@ -163,6 +169,18 @@ export default class SpritzUI extends HTMLElement {
 
   get estimatedMinutes() {
     return this._words.length / this.wpm;
+  }
+
+  get content() {
+    return this.getAttribute('content');
+  }
+
+  set content(newVal) {
+    _utils.setAttr({ 
+      elem: this,
+      key: 'content',
+      value: newVal,
+    });
   }
 
   get index() {
