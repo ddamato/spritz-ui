@@ -26,6 +26,7 @@ function _removePunctuation(word) {
 }
 
 function _check({ key, startsWith, endsWith }) {
+  if (startsWith && endsWith) return true;
   const isEnd = this[key] && endsWith;
   const isStart = !this[key] && startsWith && !endsWith;
 

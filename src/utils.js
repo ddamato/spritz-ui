@@ -39,6 +39,11 @@ const CHAR_UNWRAP_REGEX = /[\(|\)\"]/g;
 
 export const orpTagName = 'b';
 
+export function adjustOffsetPercent($orp, $redicle) {
+  const orpCenter = $orp.offsetLeft + Math.ceil($orp.offsetWidth / 2) - 2;
+  return orpCenter * 100 / $redicle.offsetWidth;
+}
+
 export function adjustTiming(duration, metadata) {
   if (!metadata) return duration;
   const { content } = metadata;
@@ -46,6 +51,35 @@ export function adjustTiming(duration, metadata) {
   duration *= adjustments.number(content);
   duration *= adjustments.sentence(content);
   return duration;
+}
+
+export function getInnerHTML({ content, orp }) {
+  return content.replace(/./g, (char, index) => index === orp ? `<${orpTagName}>${char}</${orpTagName}>` : char);
+}
+
+function getOptimalRecognitionPoint(word) {
+  const orp = Math.ceil((word.length - 1) / 4);
+  return /\W/.test(word[orp]) ? orp - 1 : orp;
+}
+
+export function indexWithinBoundaries(index, arr) {
+  return Math.max(Math.min(index, arr.length - 1), 0);
+}
+
+export function process(text, sentenceIndices) {
+  if (!text) return;
+    const wrapper = new Wrapper();
+    return text.replace(WORD_SPLIT_REGEX, '$1- ')
+      .match(HYPHENATE_REGEX)
+      .filter((result) => /[\w]/.test(result))
+      .map((result, i, arr) => {
+        if (/[.?!]/.test(result) && arr[i + 1]) sentenceIndices.push(i + 1);
+        return {
+          content: result.replace(CHAR_UNWRAP_REGEX, ''),
+          orp: getOptimalRecognitionPoint(result),
+          ...wrapper.check(result)  
+        }
+      });
 }
 
 export function requestTimeout(fn, delay) {
@@ -73,38 +107,4 @@ export function setAttr({ elem, key, value, check }) {
   } else {
     elem.removeAttribute(key);
   }
-}
-
-export function indexWithinBoundaries(index, arr) {
-  return Math.max(Math.min(index, arr.length - 1), 0);
-}
-
-function getOptimalRecognitionPoint(word) {
-  const orp = Math.ceil((word.length - 1) / 4);
-  return /\W/.test(word[orp]) ? orp - 1 : orp;
-}
-
-export function getInnerHTML({ content, orp }) {
-  return content.replace(/./g, (char, index) => index === orp ? `<${orpTagName}>${char}</${orpTagName}>` : char);
-}
-
-export function adjustOffsetPercent($orp, $redicle) {
-  const orpCenter = $orp.offsetLeft + Math.ceil($orp.offsetWidth / 2) - 2;
-  return orpCenter * 100 / $redicle.offsetWidth;
-}
-
-export function process(text, sentenceIndices) {
-  if (!text) return;
-    const wrapper = new Wrapper();
-    return text.replace(WORD_SPLIT_REGEX, '$1- ')
-      .match(HYPHENATE_REGEX)
-      .filter((result) => /[\w]/.test(result))
-      .map((result, i, arr) => {
-        if (/[.?!]/.test(result) && arr[i + 1]) sentenceIndices.push(i + 1);
-        return {
-          content: result.replace(CHAR_UNWRAP_REGEX, ''),
-          orp: getOptimalRecognitionPoint(result),
-          ...wrapper.check(result)  
-        }
-      });
 }
