@@ -39,12 +39,14 @@ export default class SpritzUI extends HTMLElement {
   fastbackward() {
     this.pause();
     this.index = this._jumpBackward();
+    this._emitEvent('fastbackward');
     return this;
   }
 
   fastforward() {
     this.pause();
     this.index = this._jumpForward();
+    this._emitEvent('fastforward');
     return this;
   }
 
@@ -61,24 +63,31 @@ export default class SpritzUI extends HTMLElement {
   process(text) {
     this._init();
     this._words = _utils.process(text, this._sentenceIndices);
+    this._words.length && this._emitEvent('ready');
     return this;
   }
 
   stepbackward() {
     this.pause();
     this.index--;
+    this._emitEvent('stepbackward');
     return this;
   }
 
   stepforward() {
     this.pause();
     this.index++;
+    this._emitEvent('stepforward');
     return this;
   }
 
   stop() {
     this.status = 'stopped';
     return this;
+  }
+
+  _emitEvent(name) {
+    this.dispatchEvent(new CustomEvent(name));
   }
 
   _getSentenceIndex() {
@@ -98,6 +107,8 @@ export default class SpritzUI extends HTMLElement {
       this._pause && this._pause();
       this.index = -1;
     }
+
+    this._emitEvent(status);
   }
 
   _init() {
