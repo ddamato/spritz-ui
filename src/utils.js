@@ -66,6 +66,15 @@ export function requestTimeout(fn, delay) {
   return loop();
 }
 
+export function setAttr({ elem, key, value, check }) {
+  check = check || Boolean;
+  if (check(value)) {
+    elem.setAttribute(key, typeof value === 'boolean' ? '' : value);
+  } else {
+    elem.removeAttribute(key);
+  }
+}
+
 export function indexWithinBoundaries(index, arr) {
   return Math.max(Math.min(index, arr.length - 1), 0);
 }

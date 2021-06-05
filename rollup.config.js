@@ -9,7 +9,7 @@ export default {
   input: './src/index.js',
   plugins: [
     html(),
-    css({ inject: false }),
+    css({ inject: false, minimize: true }),
     resolve(),
     commonjs(),
     terser(),

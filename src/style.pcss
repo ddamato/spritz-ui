@@ -1,12 +1,32 @@
+:host {
+  display: block;
+  font-size: 2em;
+}
+
+:host([parentheses]):before {
+  content: "(";
+}
+
+:host([parentheses]):after {
+  content: ")";
+}
+
+:host([quotes]):before {
+  content: "\"";
+}
+
+:host([quotes]):after {
+  content: "\"";
+}
+
 #redicle {
-  --orpPercent: calc(var(--orpOffset) / 100 * 100%);
+  --orpPercent: calc(var(--orpOffset, 38) / 100 * 100%);
   --focus: 1ch;
   position: relative;
   border-top: 4px solid currentColor;
   border-bottom: 4px solid currentColor;
   width: 10em;
   padding: var(--focus) 0;
-  font-size: 2em;
   background-repeat: no-repeat;
   background-position: var(--orpPercent) 0;
   background-size: 100%;

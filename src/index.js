@@ -17,20 +17,11 @@ export default class SpritzUI extends HTMLElement {
     this._$slot = this.shadowRoot.getElementById('text');
   }
 
-  process(text) {
-    this._words = _utils.process(text, this._sentenceIndices);
-    return this;
+  static get observedAttributes() {
+    return ['index', 'status', 'wpm'];
   }
 
   connectedCallback() {
-    this._sentenceIndices = [0];
-    this._words = [];
-
-    this.index = -1;
-    this.wpm = 250;
-
-    this._orpOffset = this._$redicle.style.getPropertyValue('--orpOffset');
-
     this._$redicle.addEventListener('animationend', () => this._play());
     this._$slot.addEventListener('slotchange', () => {
       const [node] = this._$slot.assignedNodes({ flatten: true });
@@ -38,55 +29,23 @@ export default class SpritzUI extends HTMLElement {
     });
   }
 
-  get duration() {
-    return 60000 / this.wpm;
-  }
-
-  get estimatedMinutes() {
-    return this._words.length / this.wpm;
-  }
-
-  static get observedAttributes() {
-    return ['index', 'status', 'wpm'];
-  }
-
   attributeChangedCallback(attrName, oldVal, newVal) {
     if (oldVal === newVal) return;
-
-    if (attrName === 'index') {
-      this._render();
-    }
-
-    if (attrName === 'wpm') {
-      this._$redicle.style.setProperty('--msDuration', this.duration);
-    }
-
-    if (attrName === 'status') {
-      if (newVal === statuses.STATUS_PAUSED)  {
-        this._pause && this._pause();
-      }
-
-      if (newVal === statuses.STATUS_STOPPED)  {
-        this._pause && this._pause();
-        this.index = -1;
-      }
-    }
+    if (attrName === 'index') this._render();
+    if (attrName === 'wpm') this._$redicle.style.setProperty('--msDuration', this.duration);
+    if (attrName === 'status') this._handleStatusChange(newVal);
   }
 
-  play() {
-    this.status = 'playing';
+  fastbackward() {
+    this.pause();
+    this.index = this._jumpBackward();
     return this;
   }
 
-  get status() {
-    return this.getAttribute('status');
-  }
-
-  set status(newVal) {
-    const val = Object.values(statuses).includes(newVal)
-      ? newVal
-      : statuses.STATUS_STOPPED;
-      this.setAttribute('status', val);
+  fastforward() {
+    this.pause();
+    this.index = this._jumpForward();
+    return this;
   }
 
   pause() {
@@ -94,29 +53,32 @@ export default class SpritzUI extends HTMLElement {
     return this;
   }
 
-  stop() {
-    this.status = 'stopped';
+  play() {
+    this.status = 'playing';
+    return this;
+  }
+
+  process(text) {
+    this._init();
+    this._words = _utils.process(text, this._sentenceIndices);
+    return this;
+  }
+
+  stepbackward() {
+    this.pause();
+    this.index--;
     return this;
   }
 
   stepforward() {
     this.pause();
     this.index++;
+    return this;
   }
 
-  stepbackward() {
-    this.pause();
-    this.index--;
-  }
-
-  fastbackward() {
-    this.pause();
-    this.index = this._jumpBackward();
-  }
-
-  fastforward() {
-    this.pause();
-    this.index = this._jumpForward();
+  stop() {
+    this.status = 'stopped';
+    return this;
   }
 
   _getSentenceIndex() {
@@ -127,10 +89,24 @@ export default class SpritzUI extends HTMLElement {
       : closestSentenceIndex;
   }
 
-  _jumpForward() {
-    const sentenceIndex = this._getSentenceIndex();
-    const wordIndex = _utils.indexWithinBoundaries(sentenceIndex + 1, this._sentenceIndices);
-    return this._sentenceIndices[wordIndex];
+  _handleStatusChange(status) {
+    if (status === statuses.STATUS_PAUSED)  {
+      this._pause && this._pause();
+    }
+
+    if (status === statuses.STATUS_STOPPED)  {
+      this._pause && this._pause();
+      this.index = -1;
+    }
+  }
+
+  _init() {
+    this._orpOffset = 38;
+    this._sentenceIndices = [0];
+    this._words = [];
+
+    this.index = -1;
+    this.wpm = 250;
   }
 
   _jumpBackward() {
@@ -139,19 +115,17 @@ export default class SpritzUI extends HTMLElement {
     return this._sentenceIndices[wordIndex];
   }
 
+  _jumpForward() {
+    const sentenceIndex = this._getSentenceIndex();
+    const wordIndex = _utils.indexWithinBoundaries(sentenceIndex + 1, this._sentenceIndices);
+    return this._sentenceIndices[wordIndex];
+  }
+
   _play() {
-    if (!this._words.length || this._wordUndefined(this.index + 1)) return this.stop();
+    if (!this._words.length || !this._words[this.index + 1]) return this.stop();
     this.index += 1;
     const ms = _utils.adjustTiming(this.duration, this._words[this.index]);
     this._pause = _utils.requestTimeout(() => this._play(), ms);
-  }
-
-  _wordUndefined(index) {
-    return !this._words[index];
-  }
-
-  _sentenceUndefined(index) {
-    return !this._sentenceIndices[index];
   }
 
   _render() {
@@ -160,36 +134,24 @@ export default class SpritzUI extends HTMLElement {
     this._$word.innerHTML = _utils.getInnerHTML(word);
     const $orp = this._$word.querySelector(_utils.orpTagName);
     const offset = _utils.adjustOffsetPercent($orp, this._$redicle);
-    this._$word.style.setProperty('--wordOffset', `${this._orpOffset - offset}%`); // change to percentage
-    this._setAttr('quotes', word);
-    this._setAttr('parentheses', word);
+    this._$word.style.setProperty('--wordOffset', `${this._orpOffset - offset}%`);
+    _utils.setAttr({ elem: this, key: 'quotes', value: word['quotes'] });
+    _utils.setAttr({ elem: this, key: 'parentheses', value: word['parentheses'] });
   }
 
   _reset() {
     this._$word.innerHTML = '';
-    this._$word.style = '';
-    this.removeAttribute('quotes');
-    this.removeAttribute('parentheses');
+    this._$word.removeAttribute('style');
+    _utils.setAttr({ elem: this, key: 'quotes', value: false });
+    _utils.setAttr({ elem: this, key: 'parentheses', value: false });
   }
 
-  _setAttr(key, metadata) {
-    if (metadata[key]) {
-      this.setAttribute(key, '');
-    } else {
-      this.removeAttribute(key);
-    }
+  get duration() {
+    return 60000 / this.wpm;
   }
 
-  get wpm() {
-    return Number(this.getAttribute('wpm'));
-  }
-
-  set wpm(newVal) {
-    if (!isNaN(newVal)) {
-      this.setAttribute('wpm', newVal);
-    } else {
-      this.removeAttribute('wpm');
-    }
+  get estimatedMinutes() {
+    return this._words.length / this.wpm;
   }
 
   get index() {
@@ -202,6 +164,38 @@ export default class SpritzUI extends HTMLElement {
     val = parseInt(newVal);
     if (!(_utils.indexWithinBoundaries(val, this._words) === val || val === -1)) return;
     this.setAttribute('index', val);
+  }
+
+  get status() {
+    return this.getAttribute('status');
+  }
+
+  set status(newVal) {
+    const status = Object.values(statuses).includes(newVal)
+      ? newVal
+      : statuses.STATUS_STOPPED;
+      this.setAttribute('status', status);
+  }
+
+  get wpm() {
+    return Number(this.getAttribute('wpm'));
+  }
+
+  set wpm(newVal) {
+    _utils.setAttr({ 
+      elem: this,
+      key: 'wpm',
+      value: newVal,
+      check: (v) => !isNaN(v)
+    });
+  }
+
+  get _orpOffset() {
+    return this._$redicle.style.getPropertyValue('--orpOffset');
+  }
+
+  set _orpOffset(newVal) {
+    this._$redicle.style.setProperty('--orpOffset', newVal);
   }
 }
 
