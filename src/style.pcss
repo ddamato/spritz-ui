@@ -1,7 +1,16 @@
 :host {
-  display: block;
+  display: inline-block;
   font-size: 2em;
+  --verticalPadding: 1ch;
 }
+
+:host([parentheses]):before,
+:host([parentheses]):after,
+:host([quotes]):before,
+:host([quotes]):after {
+  padding: var(--verticalPadding) 0;
+}
+
 
 :host([parentheses]):before {
   content: "(";
@@ -21,7 +30,6 @@
 
 #redicle {
   --orpPercent: calc(var(--orpOffset, 38) / 100 * 100%);
-  --verticalPadding: 1ch;
   position: relative;
   border-top: 4px solid currentColor;
   border-bottom: 4px solid currentColor;

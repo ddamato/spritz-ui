@@ -14,7 +14,6 @@ export default class SpritzUI extends HTMLElement {
     this.shadowRoot.innerHTML = `<style>${css}</style>${html}`;
     this._$redicle = this.shadowRoot.getElementById('redicle');
     this._$word = this.shadowRoot.getElementById('word');
-    this._$slot = this.shadowRoot.getElementById('text');
   }
 
   static get observedAttributes() {
@@ -23,10 +22,6 @@ export default class SpritzUI extends HTMLElement {
 
   connectedCallback() {
     this._$redicle.addEventListener('animationend', () => this._play());
-    this._$slot.addEventListener('slotchange', () => {
-      const [node] = this._$slot.assignedNodes({ flatten: true });
-      !this.content && this.process(node.textContent);
-    });
   }
 
   attributeChangedCallback(attrName, oldVal, newVal) {
@@ -35,6 +30,62 @@ export default class SpritzUI extends HTMLElement {
     if (attrName === 'wpm') this._$redicle.style.setProperty('--msDuration', this.duration);
     if (attrName === 'status') this._handleStatusChange(newVal);
     if (attrName === 'content') this._processById(newVal);
+  }
+
+  get duration() {
+    return 60000 / this.wpm;
+  }
+
+  get estimatedMinutes() {
+    return this._words.length / this.wpm;
+  }
+
+  get content() {
+    return this.getAttribute('content');
+  }
+
+  set content(newVal) {
+    _utils.setAttr({ 
+      elem: this,
+      key: 'content',
+      value: newVal,
+    });
+  }
+
+  get index() {
+    return parseInt(this.getAttribute('index'));
+  }
+
+  set index(newVal) {
+    let val = -1;
+    if (isNaN(newVal)) return;
+    val = parseInt(newVal);
+    if (!(_utils.indexWithinBoundaries(val, this._words) === val || val === -1)) return;
+    this.setAttribute('index', val);
+  }
+
+  get status() {
+    return this.getAttribute('status');
+  }
+
+  set status(newVal) {
+    const status = Object.values(statuses).includes(newVal)
+      ? newVal
+      : statuses.STATUS_STOPPED;
+      this.setAttribute('status', status);
+  }
+
+  get wpm() {
+    return Number(this.getAttribute('wpm'));
+  }
+
+  set wpm(newVal) {
+    _utils.setAttr({ 
+      elem: this,
+      key: 'wpm',
+      value: newVal,
+      check: (v) => !isNaN(v)
+    });
   }
 
   fastbackward() {
@@ -141,6 +192,9 @@ export default class SpritzUI extends HTMLElement {
   }
 
   _processById(id) {
+    if (document.readyState !== 'complete') {
+      return document.addEventListener('readystatechange', () => this._processById(id), { once: true });
+    }
     const elem = document.getElementById(id);
     elem && this.process(elem.textContent);
   }
@@ -161,62 +215,6 @@ export default class SpritzUI extends HTMLElement {
     this._$word.removeAttribute('style');
     _utils.setAttr({ elem: this, key: 'quotes', value: false });
     _utils.setAttr({ elem: this, key: 'parentheses', value: false });
-  }
-
-  get duration() {
-    return 60000 / this.wpm;
-  }
-
-  get estimatedMinutes() {
-    return this._words.length / this.wpm;
-  }
-
-  get content() {
-    return this.getAttribute('content');
-  }
-
-  set content(newVal) {
-    _utils.setAttr({ 
-      elem: this,
-      key: 'content',
-      value: newVal,
-    });
-  }
-
-  get index() {
-    return parseInt(this.getAttribute('index'));
-  }
-
-  set index(newVal) {
-    let val = -1;
-    if (isNaN(newVal)) return;
-    val = parseInt(newVal);
-    if (!(_utils.indexWithinBoundaries(val, this._words) === val || val === -1)) return;
-    this.setAttribute('index', val);
-  }
-
-  get status() {
-    return this.getAttribute('status');
-  }
-
-  set status(newVal) {
-    const status = Object.values(statuses).includes(newVal)
-      ? newVal
-      : statuses.STATUS_STOPPED;
-      this.setAttribute('status', status);
-  }
-
-  get wpm() {
-    return Number(this.getAttribute('wpm'));
-  }
-
-  set wpm(newVal) {
-    _utils.setAttr({ 
-      elem: this,
-      key: 'wpm',
-      value: newVal,
-      check: (v) => !isNaN(v)
-    });
   }
 
   get _orpOffset() {

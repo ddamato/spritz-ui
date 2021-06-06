@@ -1,16 +1,72 @@
 <html lang="en">
   <head>
     <script type="module" src="./dist/spritz-ui.esm.js" defer></script>
+    <style>
+      body {
+        margin: 2rem;
+        font-family: sans-serif;
+      }
+
+      .controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 1em auto;
+        max-width: 300px;
+      }
+
+      button, input {
+        font: inherit;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        font-size: 1.5em;
+        max-width: 6ch;
+        cursor: pointer;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 50ch;
+        font: inherit;
+        max-width: 300px;
+        margin: 0 auto;
+        display: block;
+        padding: 1em;
+      }
+
+      spritz-ui {
+        display: flex;
+        justify-content: center;
+        margin: 0 auto;
+        --spritz-orp-accent: orange;
+      }
+    </style>
   </head>
   <body>
-    <spritz-ui>
+    <spritz-ui content="my-text"></spritz-ui>
+    <div class="controls">
+      <button id="fastbackward">&#9198;</button>
+      <button id="stepbackward">&#9194;</button>
+      <button id="stop">&#9209;</button>
+      <button id="play-pause">&#9199;</button>
+      <button id="stepforward">&#9193;</button>
+      <button id="fastforward">&#9197;</button>
+      <input id="wpm" type="number" value="250"/>
+    </div>
+    <textarea id="my-text">
       Readymade copper mug iPhone, vice poke poutine pickled kinfolk roof party before they sold out. Iceland single-origin coffee art party cronut, tbh sriracha put a bird on it pickled bitters vice cloud bread helvetica dreamcatcher listicle migas. (Cloud bread beard fam lo-fM, pug authentic) XOXO hashtag skateboard cray you probably haven't heard of them poutine vice. +1 blue bottle "microdosing" pug blog fingerstache copper mug ethical lo-fM. Kale chips hoodie you probably haven't heard of them chambray air plant shabby chic la croix organic waistcoat vegan tumeric cornhole meditation neutra tumblr.
-    </spritz-ui>
-    <button>play</button>
-    <script>
+    </textarea>
+    <script defer>
       const ui = document.querySelector('spritz-ui');
-      const play = document.querySelector('button');
-      play.addEventListener('click', () => ui.play());
+
+      document.getElementById('fastbackward').addEventListener('click', () => ui.fastbackward());
+      document.getElementById('stepbackward').addEventListener('click', () => ui.stepbackward());
+      document.getElementById('stop').addEventListener('click', () => ui.stop());
+      document.getElementById('stepforward').addEventListener('click', () => ui.stepforward());
+      document.getElementById('fastforward').addEventListener('click', () => ui.fastforward());
+      document.getElementById('play-pause').addEventListener('click', () => (ui.status === 'playing' ? ui.pause.bind(ui) : ui.play.bind(ui))());
+      document.getElementById('wpm').addEventListener('input', ({ target }) => ui.wpm = target.value);
     </script>
   </body>
 </html>
