@@ -4,28 +4,14 @@
   --verticalPadding: 1ch;
 }
 
-:host([parentheses]):before,
-:host([parentheses]):after,
-:host([quotes]):before,
-:host([quotes]):after {
+:host([start]):before {
   padding: var(--verticalPadding) 0;
+  content: attr(start);
 }
 
-
-:host([parentheses]):before {
-  content: "(";
-}
-
-:host([parentheses]):after {
-  content: ")";
-}
-
-:host([quotes]):before {
-  content: "\"";
-}
-
-:host([quotes]):after {
-  content: "\"";
+:host([end]):after {
+  padding: var(--verticalPadding) 0;
+  content: attr(end);
 }
 
 #redicle {

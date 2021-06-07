@@ -206,15 +206,15 @@ export default class SpritzUI extends HTMLElement {
     const $orp = this._$word.querySelector(_utils.orpTagName);
     const offset = _utils.adjustOffsetPercent($orp, this._$redicle);
     this._$word.style.setProperty('--wordOffset', `${this._orpOffset - offset}%`);
-    _utils.setAttr({ elem: this, key: 'quotes', value: word['quotes'] });
-    _utils.setAttr({ elem: this, key: 'parentheses', value: word['parentheses'] });
+    _utils.setAttr({ elem: this, key: 'start', value: word['start'] });
+    _utils.setAttr({ elem: this, key: 'end', value: word['end'] });
   }
 
   _reset() {
     this._$word.innerHTML = '';
     this._$word.removeAttribute('style');
-    _utils.setAttr({ elem: this, key: 'quotes', value: false });
-    _utils.setAttr({ elem: this, key: 'parentheses', value: false });
+    _utils.setAttr({ elem: this, key: 'start', value: false });
+    _utils.setAttr({ elem: this, key: 'end', value: false });
   }
 
   get _orpOffset() {

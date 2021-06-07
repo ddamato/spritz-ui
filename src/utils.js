@@ -1,4 +1,5 @@
 import Wrapper from './Wrapper';
+import { COMPLETE_REGEX_UNWRAP } from './wrappings';
 
 const puncExceptions = [ 
   'ave.',
@@ -35,7 +36,6 @@ const adjustments = {
 
 const WORD_SPLIT_REGEX = /((?=\w{15,})(\w{7})|(?!^\w{1,14})$)/g;
 const HYPHENATE_REGEX = /[^\s-]+-?/g;
-const CHAR_UNWRAP_REGEX = /[\(|\)\"]/g;
 
 export const orpTagName = 'b';
 
@@ -75,7 +75,7 @@ export function process(text, sentenceIndices) {
       .map((result, i, arr) => {
         if (/[.?!]/.test(result) && arr[i + 1]) sentenceIndices.push(i + 1);
         return {
-          content: result.replace(CHAR_UNWRAP_REGEX, ''),
+          content: result.replace(COMPLETE_REGEX_UNWRAP, ''),
           orp: getOptimalRecognitionPoint(result),
           ...wrapper.check(result)  
         }
@@ -100,10 +100,17 @@ export function requestTimeout(fn, delay) {
   return loop();
 }
 
+function valueToAttr(value) {
+  if (typeof value === 'boolean')  return '';
+  if (Array.isArray(value)) return value.join('');
+  return value;
+}
+
 export function setAttr({ elem, key, value, check }) {
   check = check || Boolean;
+  value = valueToAttr(value)
   if (check(value)) {
-    elem.setAttribute(key, typeof value === 'boolean' ? '' : value);
+    elem.setAttribute(key, value);
   } else {
     elem.removeAttribute(key);
   }
