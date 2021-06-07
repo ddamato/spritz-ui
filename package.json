@@ -8,6 +8,7 @@
   "unpkg": "dist/spritz-ui.umd.js",
   "scripts": {
     "build": "rollup -c",
+    "build:docs":"npm run build && cp ./dist/spritz-ui.esm.js ./docs",
     "coverage": "npm run test && nyc report --reporter=lcov",
     "coveralls": "cat ./coverage/lcov.info | node_modules/.bin/coveralls",
     "lint": "eslint .",
