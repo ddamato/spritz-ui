@@ -84,7 +84,7 @@ export default class SpritzUI extends HTMLElement {
       elem: this,
       key: 'wpm',
       value: newVal,
-      check: (v) => !isNaN(v)
+      check: (v) => !isNaN(v) && parseInt(v, 10) > 0
     });
   }
 

@@ -108,7 +108,7 @@ function valueToAttr(value) {
 
 export function setAttr({ elem, key, value, check }) {
   check = check || Boolean;
-  value = valueToAttr(value)
+  value = valueToAttr(value);
   if (check(value)) {
     elem.setAttribute(key, value);
   } else {
