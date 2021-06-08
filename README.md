@@ -3,7 +3,13 @@
 [![Build Status](https://travis-ci.org/ddamato/spritz-ui.svg?branch=master)](https://travis-ci.org/ddamato/spritz-ui)
 [![Coverage Status](https://coveralls.io/repos/github/ddamato/spritz-ui/badge.svg?branch=master)](https://coveralls.io/github/ddamato/spritz-ui?branch=master)
 
-Web Component based off of the Spritz speed reading technique
+Web Component based off of the Spritz speed reading technique.
+
+[Spritz](https://spritz.com/) analyzes content and presents it to the reader one word at a time in a window we call the redicle. One key letter in each word is highlighted. We we call this letter the “Optimal Recognition Point” (ORP). Our redicle keeps your eyes focused on the ORP, allowing you to read, comprehend, and retain information without the need to move your eyes.
+
+[Readsy](http://www.readsy.co/) is powered by Spritz.
+
+This package mimicks the features of Spritz as a web component.
 
 ## Install
 
@@ -24,7 +30,6 @@ Then import the component on the page.
 ```js
 import 'spritz-ui';
 ```
-
 ## Usage
 
 Just put the component on the page which has the initialization script.
@@ -85,7 +90,7 @@ There have been a few features that go beyond the component that this was origin
 In additional to jumping to a previous or next word, this component can also jump to the previous and next sentences.
 
 ### Punctuation exceptions
-This component has a built-in list of punctuation exceptions. This is so the component doesn't falsy pause on words that don't actually end sentences.
+This component has a built-in list of punctuation exceptions. This is so the component doesn't falsly pause on words that don't actually end sentences.
 
 ### Intelligent wrapping
 The component will identify different kinds of characters expected to wrap text; specifically brackets and quotes. It will display the wrapping on the outside of the reader for the duration of the wrapping. While you're unable to turn this off completely, you can hide the wrappings with CSS.
