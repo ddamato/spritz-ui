@@ -7,7 +7,7 @@ const statuses = {
   STATUS_PAUSED: 'paused',
   STATUS_PLAYING: 'playing',
 }
-export default class SpritzUI extends HTMLElement {
+export class SpritzUI extends window.HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
@@ -226,4 +226,6 @@ export default class SpritzUI extends HTMLElement {
   }
 }
 
-window.customElements.define('spritz-ui', SpritzUI);
+export default (function(){
+  window.customElements.define('spritz-ui', SpritzUI);
+})();

@@ -8,11 +8,11 @@
   "unpkg": "dist/spritz-ui.umd.js",
   "scripts": {
     "build": "rollup -c",
-    "build:docs": "npm run build && cp ./dist/spritz-ui.esm.js ./docs",
+    "build:docs": "npm run build && cp ./dist/spritz-ui.umd.js ./docs",
     "coverage": "npm run test && nyc report --reporter=lcov",
     "coveralls": "cat ./coverage/lcov.info | node_modules/.bin/coveralls",
     "lint": "eslint .",
-    "test": "nyc mocha test/src/*.test.js -r esm",
+    "test": "npm run build && nyc mocha test -r esm",
     "version": "auto-changelog -p && git add CHANGELOG.md"
   },
   "files": [
@@ -39,7 +39,6 @@
     "esm": "^3.2.25",
     "html-minifier": "^4.0.0",
     "jsdom": "^16.2.2",
-    "jsdom-global": "^3.0.2",
     "mocha": "^7.2.0",
     "nyc": "^15.1.0",
     "rollup": "^2.13.1",

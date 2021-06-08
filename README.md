@@ -22,7 +22,7 @@ npm i spritz-ui
 Then import the component on the page.
 
 ```js
-import SpritzUI from 'spritz-ui';
+import 'spritz-ui';
 ```
 
 ## Usage
