@@ -32,7 +32,7 @@ Just put the component on the page which has the initialization script.
 <spritz-ui content="element-id-with-content"></spritz-ui>
 ```
 
-Note: the UI does not come with controls. You will need to provide your own controls. The demo has a sample of how these could be made.
+Note: the UI does not come with controls. You will need to provide your own controls. [The demo](https://ddamato.github.io/spritz-ui/) has a sample of how these could be made.
 
 ### Attributes
 #### `content`
@@ -87,5 +87,12 @@ In additional to jumping to a previous or next word, this component can also jum
 ### Punctuation exceptions
 This component has a built-in list of punctuation exceptions. This is so the component doesn't falsy pause on words that don't actually end sentences.
 
-### Intelligence wrapping
-The component will identify different kinds of characters expected to wrap text; specifically brackets and quotes. It will display the wrapping on the outside of the reader for the duration of the wrapping.
+### Intelligent wrapping
+The component will identify different kinds of characters expected to wrap text; specifically brackets and quotes. It will display the wrapping on the outside of the reader for the duration of the wrapping. While you're unable to turn this off completely, you can hide the wrappings with CSS.
+
+```css
+spritz-ui[prewrap]:before,
+spritz-ui[postwrap]:after {
+  display: none;
+}
+```

@@ -4,12 +4,12 @@
   --verticalPadding: 1ch;
 }
 
-:host([start]):before {
+:host([prewrap]):before {
   padding: var(--verticalPadding) 0;
   content: attr(start);
 }
 
-:host([end]):after {
+:host([postwrap]):after {
   padding: var(--verticalPadding) 0;
   content: attr(end);
 }
