@@ -2,21 +2,35 @@ import Wrapper from './Wrapper';
 import { COMPLETE_REGEX_UNWRAP } from './wrappings';
 
 const puncExceptions = [ 
+  'a.m.',
+  'a.d.',
   'ave.',
+  'b.a.',
+  'b.s.',
   'blvd.',
+  'capt.',
   'ct.',
+  'd.c.',
+  'dept.',
   'dr.',
   'eg.',
+  'est.',
   'etc.',
   'ie.',
+  'jr.',
+  'ltd.',
   'mr.',
   'mrs.',
   'mo.',
+  'no.',
   'rd.',
   'sr.',
   'st.',
   'ste.',
-  'tpk.'
+  'tpk.',
+  'univ.',
+  'u.s.',
+  'v.s.'
 ];
 
 const adjustments = {
