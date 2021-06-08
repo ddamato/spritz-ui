@@ -82,6 +82,20 @@ Sends the display forward one word.
 #### `stop()`
 Stops the display, resetting to the beginning.
 
+## Events
+Each method above has an associated event that is fired with the following exceptions:
+
+- `stop()`, `play()`, and `pause()` use their status as events (`stopped`, `playing`, `paused`);
+- Once `process()` has completed, the component will fire the `ready` event.
+
+Examples:
+```js
+const ui = document.querySelector('spritz-ui');
+ui.addEventListener('stepforward', () => { console.log('Spritz UI stepped forward') });
+ui.addEventListener('stopped', () => { console.log('Spritz UI has stopped') });
+ui.addEventListener('ready', () => { console.log('Spritz UI is ready to play') });
+```
+
 ## Additional features
 
 There have been a few features that go beyond the component that this was originally inspired from.
