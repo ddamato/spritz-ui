@@ -6,12 +6,12 @@
 
 :host([prewrap]):before {
   padding: var(--verticalPadding) 0;
-  content: attr(start);
+  content: attr(prewrap);
 }
 
 :host([postwrap]):after {
   padding: var(--verticalPadding) 0;
-  content: attr(end);
+  content: attr(postwrap);
 }
 
 #redicle {
